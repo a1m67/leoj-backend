@@ -27,7 +27,7 @@ public interface QuestionService extends IService<Question> {
     /**
      * 获取查询条件
      *
-     * @param QuestionQueryRequest
+     * @param questionQueryRequest
      * @return
      */
     QueryWrapper<Question> getQueryWrapper(QuestionQueryRequest questionQueryRequest);

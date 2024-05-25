@@ -2,6 +2,7 @@ package com.yupi.leoj.controller;
 
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.google.gson.Gson;
 import com.yupi.leoj.annotation.AuthCheck;
 import com.yupi.leoj.common.BaseResponse;
 import com.yupi.leoj.common.DeleteRequest;
@@ -10,10 +11,8 @@ import com.yupi.leoj.common.ResultUtils;
 import com.yupi.leoj.constant.UserConstant;
 import com.yupi.leoj.exception.BusinessException;
 import com.yupi.leoj.exception.ThrowUtils;
-import com.yupi.leoj.model.dto.question.QuestionAddRequest;
-import com.yupi.leoj.model.dto.question.QuestionEditRequest;
-import com.yupi.leoj.model.dto.question.QuestionQueryRequest;
-import com.yupi.leoj.model.dto.question.QuestionUpdateRequest;
+import com.yupi.leoj.model.dto.question.*;
+import com.yupi.leoj.model.dto.user.UserQueryRequest;
 import com.yupi.leoj.model.entity.Question;
 import com.yupi.leoj.model.entity.User;
 import com.yupi.leoj.model.vo.QuestionVO;
@@ -60,6 +59,14 @@ public class QuestionController {
         }
         Question question = new Question();
         BeanUtils.copyProperties(questionAddRequest, question);
+        List<JudgeCase> judgeCases = questionAddRequest.getJudgeCase();
+        if (judgeCases != null) {
+            question.setJudgeCase(JSONUtil.toJsonStr(judgeCases));
+        }
+        List<JudgeConfig> judgeConfig = questionAddRequest.getJudgeConfig();
+        if (judgeConfig != null) {
+            question.setJudgeCase(JSONUtil.toJsonStr(judgeConfig));
+        }
         List<String> tags = questionAddRequest.getTags();
         if (tags != null) {
             question.setTags(JSONUtil.toJsonStr(tags));
@@ -114,6 +121,14 @@ public class QuestionController {
         }
         Question question = new Question();
         BeanUtils.copyProperties(questionUpdateRequest, question);
+        List<JudgeCase> judgeCases = questionUpdateRequest.getJudgeCase();
+        if (judgeCases != null) {
+            question.setJudgeCase(JSONUtil.toJsonStr(judgeCases));
+        }
+        List<JudgeConfig> judgeConfig = questionUpdateRequest.getJudgeConfig();
+        if (judgeConfig != null) {
+            question.setJudgeCase(JSONUtil.toJsonStr(judgeConfig));
+        }
         List<String> tags = questionUpdateRequest.getTags();
         if (tags != null) {
             question.setTags(JSONUtil.toJsonStr(tags));
@@ -205,7 +220,6 @@ public class QuestionController {
         return ResultUtils.success(questionService.getQuestionVOPage(questionPage, request));
     }
 
-    // endregion
 
 
     /**
@@ -222,6 +236,14 @@ public class QuestionController {
         }
         Question question = new Question();
         BeanUtils.copyProperties(questionEditRequest, question);
+        List<JudgeCase> judgeCases = questionEditRequest.getJudgeCase();
+        if (judgeCases != null) {
+            question.setJudgeCase(JSONUtil.toJsonStr(judgeCases));
+        }
+        List<JudgeConfig> judgeConfig = questionEditRequest.getJudgeConfig();
+        if (judgeConfig != null) {
+            question.setJudgeCase(JSONUtil.toJsonStr(judgeConfig));
+        }
         List<String> tags = questionEditRequest.getTags();
         if (tags != null) {
             question.setTags(JSONUtil.toJsonStr(tags));
