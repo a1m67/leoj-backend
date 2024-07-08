@@ -1,0 +1,24 @@
+package com.yupi.leoj.judge.codesandbox.model;
+
+import com.yupi.leoj.model.dto.questionsubmit.JudgeInfo;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.List;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class ExecuteCodeResponse {
+
+    private List<String> outputList;
+
+    private String message;
+
+    private String status;
+
+    private JudgeInfo judgeInfo;
+}
