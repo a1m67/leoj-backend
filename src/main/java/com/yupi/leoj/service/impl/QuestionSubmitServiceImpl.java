@@ -2,11 +2,13 @@ package com.yupi.leoj.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.yupi.leoj.common.ErrorCode;
 import com.yupi.leoj.constant.CommonConstant;
 import com.yupi.leoj.exception.BusinessException;
+import com.yupi.leoj.judge.JudgeService;
 import com.yupi.leoj.model.dto.question.QuestionQueryRequest;
 import com.yupi.leoj.model.dto.questionsubmit.JudgeInfo;
 import com.yupi.leoj.model.dto.questionsubmit.QuestionSubmitAddRequest;
@@ -26,9 +28,11 @@ import com.yupi.leoj.service.QuestionSubmitService;
 import com.yupi.leoj.mapper.QuestionSubmitMapper;
 import com.yupi.leoj.service.UserService;
 import com.yupi.leoj.utils.SqlUtils;
+import io.netty.util.concurrent.CompleteFuture;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.aop.framework.AopContext;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,6 +41,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 /**
@@ -48,13 +53,14 @@ import java.util.stream.Collectors;
 public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper, QuestionSubmit>
     implements QuestionSubmitService{
 
-
     @Resource
     private QuestionService questionService;
 
     @Resource
     private UserService userService;
-    
+    @Resource
+    @Lazy
+    private JudgeService judgeService;
     /**
      * 提交题目
      *
@@ -63,8 +69,8 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
      * @return
      */
     @Override
-    public long doQuestionSubmit(QuestionSubmitAddRequest questionSubmitAddRequest , User loginUser) {
-        // todo 判断编程语言是否合法
+    public long doQuestionSubmit(QuestionSubmitAddRequest questionSubmitAddRequest, User loginUser) {
+        // 校验编程语言是否合法
         String language = questionSubmitAddRequest.getLanguage();
         QuestionSubmitLanguageEnum languageEnum = QuestionSubmitLanguageEnum.getEnumByValue(language);
         if (languageEnum == null) {
@@ -72,24 +78,31 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
         }
         long questionId =questionSubmitAddRequest.getQuestionId();
         // 判断实体是否存在，根据类别获取实体
-        Question question = questionService.getById(questionSubmitAddRequest.getQuestionId());
+        Question question = questionService.getById(questionId);
         if (question == null) {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
         }
-        QuestionSubmit questionSubmit = new QuestionSubmit();
+        // 是否已提交题目
         long userId = loginUser.getId();
+        // 每个用户串行提交题目
+        QuestionSubmit questionSubmit = new QuestionSubmit();
         questionSubmit.setUserId(userId);
         questionSubmit.setQuestionId(questionId);
         questionSubmit.setCode(questionSubmitAddRequest.getCode());
-        questionSubmit.setLanguage(questionSubmitAddRequest.getLanguage());
+        questionSubmit.setLanguage(language);
         // 设置初始状态
         questionSubmit.setStatus(QuestionSubmitStatusEnum.WAITING.getValue());
         questionSubmit.setJudgeInfo("{}");
         boolean save = this.save(questionSubmit);
-        if (!save) {
+        if (!save){
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "数据插入失败");
         }
-        return questionSubmit.getQuestionId();
+        Long questionSubmitId = questionSubmit.getId();
+        // 执行判题服务
+        CompletableFuture.runAsync(() -> {
+            judgeService.doJudge(questionSubmitId);
+        });
+        return questionSubmitId;
     }
 
     /**
@@ -115,6 +128,7 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
         queryWrapper.eq(ObjectUtils.isNotEmpty(userId), "userId", userId);
         queryWrapper.eq(ObjectUtils.isNotEmpty(questionId), "questionId", questionId);
         queryWrapper.eq(QuestionSubmitStatusEnum.getEnumByValue(status) != null, "status", status);
+        queryWrapper.eq("isDelete", false);
         queryWrapper.orderBy(SqlUtils.validSortField(sortField), sortOrder.equals(CommonConstant.SORT_ORDER_ASC),
                 sortField);
         return queryWrapper;
@@ -137,15 +151,17 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
     public Page<QuestionSubmitVO> getQuestionSubmitVOPage(Page<QuestionSubmit> questionSubmitPage, User loginUser) {
         List<QuestionSubmit> questionSubmitList = questionSubmitPage.getRecords();
         Page<QuestionSubmitVO> questionSubmitVOPage = new Page<>(questionSubmitPage.getCurrent(), questionSubmitPage.getSize(), questionSubmitPage.getTotal());
-        if (CollUtil.isEmpty(questionSubmitList)) {
+        if (CollectionUtils.isEmpty(questionSubmitList)) {
             return questionSubmitVOPage;
         }
         List<QuestionSubmitVO> questionSubmitVOList = questionSubmitList.stream()
-                        .map(questionSubmit -> getQuestionSubmitVO(questionSubmit, loginUser))
-                                .collect(Collectors.toList());
+                .map(questionSubmit -> getQuestionSubmitVO(questionSubmit, loginUser))
+                .collect(Collectors.toList());
         questionSubmitVOPage.setRecords(questionSubmitVOList);
         return questionSubmitVOPage;
     }
+
+
 }
 
 

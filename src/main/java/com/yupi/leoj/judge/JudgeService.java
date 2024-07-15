@@ -1,7 +1,9 @@
 package com.yupi.leoj.judge;
 
+import com.yupi.leoj.model.entity.QuestionSubmit;
 import com.yupi.leoj.model.vo.QuestionSubmitVO;
 
 public interface JudgeService {
-    QuestionSubmitVO doJudge(long questionSubmitId);
+    QuestionSubmit doJudge(long questionSubmitId);
+
 }

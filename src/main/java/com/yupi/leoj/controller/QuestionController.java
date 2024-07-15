@@ -65,7 +65,7 @@ public class QuestionController {
         }
         List<JudgeConfig> judgeConfig = questionAddRequest.getJudgeConfig();
         if (judgeConfig != null) {
-            question.setJudgeCase(JSONUtil.toJsonStr(judgeConfig));
+            question.setJudgeConfig(JSONUtil.toJsonStr(judgeConfig));
         }
         List<String> tags = questionAddRequest.getTags();
         if (tags != null) {
