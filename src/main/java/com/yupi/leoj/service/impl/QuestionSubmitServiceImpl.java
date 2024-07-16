@@ -1,6 +1,5 @@
 package com.yupi.leoj.service.impl;
 
-import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -9,38 +8,26 @@ import com.yupi.leoj.common.ErrorCode;
 import com.yupi.leoj.constant.CommonConstant;
 import com.yupi.leoj.exception.BusinessException;
 import com.yupi.leoj.judge.JudgeService;
-import com.yupi.leoj.model.dto.question.QuestionQueryRequest;
-import com.yupi.leoj.model.dto.questionsubmit.JudgeInfo;
 import com.yupi.leoj.model.dto.questionsubmit.QuestionSubmitAddRequest;
 import com.yupi.leoj.model.dto.questionsubmit.QuestionSubmitQueryRequest;
 import com.yupi.leoj.model.entity.Question;
-import com.yupi.leoj.model.entity.QuestionSubmit;
 import com.yupi.leoj.model.entity.QuestionSubmit;
 import com.yupi.leoj.model.entity.User;
 import com.yupi.leoj.model.enums.QuestionSubmitLanguageEnum;
 import com.yupi.leoj.model.enums.QuestionSubmitStatusEnum;
 import com.yupi.leoj.model.vo.QuestionSubmitVO;
-import com.yupi.leoj.model.vo.QuestionVO;
-import com.yupi.leoj.model.vo.UserVO;
 import com.yupi.leoj.service.QuestionService;
-import com.yupi.leoj.service.QuestionSubmitService;
 import com.yupi.leoj.service.QuestionSubmitService;
 import com.yupi.leoj.mapper.QuestionSubmitMapper;
 import com.yupi.leoj.service.UserService;
 import com.yupi.leoj.utils.SqlUtils;
-import io.netty.util.concurrent.CompleteFuture;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.aop.framework.AopContext;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 

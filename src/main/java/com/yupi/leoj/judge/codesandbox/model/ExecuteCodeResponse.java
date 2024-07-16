@@ -1,6 +1,5 @@
 package com.yupi.leoj.judge.codesandbox.model;
 
-import com.yupi.leoj.model.dto.questionsubmit.JudgeInfo;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,7 +17,7 @@ public class ExecuteCodeResponse {
 
     private String message;
 
-    private String status;
+    private Integer status;
 
     private JudgeInfo judgeInfo;
 }
