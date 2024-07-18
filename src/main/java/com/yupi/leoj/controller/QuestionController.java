@@ -12,11 +12,16 @@ import com.yupi.leoj.constant.UserConstant;
 import com.yupi.leoj.exception.BusinessException;
 import com.yupi.leoj.exception.ThrowUtils;
 import com.yupi.leoj.model.dto.question.*;
+import com.yupi.leoj.model.dto.questionsubmit.QuestionSubmitAddRequest;
+import com.yupi.leoj.model.dto.questionsubmit.QuestionSubmitQueryRequest;
 import com.yupi.leoj.model.dto.user.UserQueryRequest;
 import com.yupi.leoj.model.entity.Question;
+import com.yupi.leoj.model.entity.QuestionSubmit;
 import com.yupi.leoj.model.entity.User;
+import com.yupi.leoj.model.vo.QuestionSubmitVO;
 import com.yupi.leoj.model.vo.QuestionVO;
 import com.yupi.leoj.service.QuestionService;
+import com.yupi.leoj.service.QuestionSubmitService;
 import com.yupi.leoj.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -36,7 +41,8 @@ import java.util.List;
 @RequestMapping("/question")
 @Slf4j
 public class QuestionController {
-
+    @Resource
+    private QuestionSubmitService questionSubmitService;
     @Resource
     private QuestionService questionService;
 
@@ -63,7 +69,7 @@ public class QuestionController {
         if (judgeCases != null) {
             question.setJudgeCase(JSONUtil.toJsonStr(judgeCases));
         }
-        List<JudgeConfig> judgeConfig = questionAddRequest.getJudgeConfig();
+        JudgeConfig judgeConfig = questionAddRequest.getJudgeConfig();
         if (judgeConfig != null) {
             question.setJudgeConfig(JSONUtil.toJsonStr(judgeConfig));
         }
@@ -125,7 +131,7 @@ public class QuestionController {
         if (judgeCases != null) {
             question.setJudgeCase(JSONUtil.toJsonStr(judgeCases));
         }
-        List<JudgeConfig> judgeConfig = questionUpdateRequest.getJudgeConfig();
+        JudgeConfig judgeConfig = questionUpdateRequest.getJudgeConfig();
         if (judgeConfig != null) {
             question.setJudgeCase(JSONUtil.toJsonStr(judgeConfig));
         }
@@ -262,7 +268,7 @@ public class QuestionController {
         if (judgeCases != null) {
             question.setJudgeCase(JSONUtil.toJsonStr(judgeCases));
         }
-        List<JudgeConfig> judgeConfig = questionEditRequest.getJudgeConfig();
+        JudgeConfig judgeConfig = questionEditRequest.getJudgeConfig();
         if (judgeConfig != null) {
             question.setJudgeCase(JSONUtil.toJsonStr(judgeConfig));
         }
@@ -283,6 +289,44 @@ public class QuestionController {
         }
         boolean result = questionService.updateById(question);
         return ResultUtils.success(result);
+    }
+
+    /**
+     * 提交题目
+     *
+     * @param questionSubmitAddRequest
+     * @param request
+     * @return resultNum 本次点赞变化数
+     */
+    @PostMapping("/question_submit/do")
+    public BaseResponse<Long> doQuestionSubmit(@RequestBody QuestionSubmitAddRequest questionSubmitAddRequest,
+                                               HttpServletRequest request) {
+        if (questionSubmitAddRequest == null || questionSubmitAddRequest.getQuestionId() <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        // 登录才能点赞
+        final User loginUser = userService.getLoginUser(request);
+        long questionSubmitId = questionSubmitService.doQuestionSubmit(questionSubmitAddRequest, loginUser);
+        return ResultUtils.success(questionSubmitId);
+    }
+
+    /**
+     * 分页获取题目提交列表（除管理员外，普通用户只能看到非答案、提交代码等公开信息）
+     *
+     * @param questionQueryRequest
+     * @return
+     */
+    @PostMapping("/question_submit/list/page")
+    public BaseResponse<Page<QuestionSubmitVO>> listQuestionSubmitByPage(@RequestBody QuestionSubmitQueryRequest questionQueryRequest,
+                                                                         HttpServletRequest request) {
+        long current = questionQueryRequest.getCurrent();
+        long size = questionQueryRequest.getPageSize();
+        // 查询到提交信息
+        Page<QuestionSubmit> questionSubmitPage = questionSubmitService.page(new Page<>(current, size),
+                questionSubmitService.getQueryWrapper(questionQueryRequest));
+        User loginUser = userService.getLoginUser(request);
+        // 脱敏处理
+        return ResultUtils.success(questionSubmitService.getQuestionSubmitVOPage(questionSubmitPage, loginUser));
     }
 
 }

@@ -61,7 +61,13 @@ class CodeSandBoxTest {
         CodeSandBox codeSandbox = CodeSandBoxFactory.newInstance(type);
         codeSandbox = new CodeSandBoxProxy(codeSandbox);
         String language = QuestionSubmitLanguageEnum.JAVA.getValue();;
-        String code = "questionSubmit.getCode()";
+        String code = "public class Main {\n" +
+                "    public static void main(String[] args) {\n" +
+                "        int a = Integer.parseInt(args[0]);\n" +
+                "        int b = Integer.parseInt(args[1]);\n" +
+                "        System.out.println(\"结果 = \" + (a + b));\n" +
+                "    }\n" +
+                "}\n";
         // 获取输入用例
 //        String judgeCaseStr = question.getJudgeCase();
 //        List<JudgeCase> judgeCaseList = JSONUtil.toList(judgeCaseStr, JudgeCase.class);
@@ -73,7 +79,6 @@ class CodeSandBoxTest {
                 .inputList(inputList)
                 .build();
         ExecuteCodeResponse response = codeSandbox.executeCode(executeCodeRequest);
-        System.out.println(response);
         System.out.println(response);
         JudgeContext judgeContext = new JudgeContext();
 
